@@ -118,8 +118,12 @@
 
   /* past: one crossed-out line each */
   .past ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-  .past li { display: flex; gap: 12px; align-items: baseline; color: var(--muted); text-decoration: line-through; text-decoration-color: var(--accent); text-decoration-thickness: 1.5px; }
-  .past .d { font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 92px; font-size: 15px; }
+  .past li { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; gap: 12px; align-items: baseline; color: var(--muted); white-space: nowrap; }
+  .past .d { font-variant-numeric: tabular-nums; font-size: 15px; text-decoration: line-through; text-decoration-color: var(--accent); text-decoration-thickness: 1.5px; }
+  .past .t { overflow: hidden; text-overflow: ellipsis; text-decoration: line-through; text-decoration-color: var(--accent); text-decoration-thickness: 1.5px; }
+  .past .p { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); text-decoration: none; }
+  .past .p:hover { text-decoration: underline; text-underline-offset: 3px; }
+  @media (max-width: 420px) { .past li { grid-template-columns: 72px minmax(0, 1fr) auto; } .past .d { font-size: 14px; } }
 
   /* calendar: one grid per month that has something on it */
   .cal { display: grid; gap: 26px; }
@@ -275,9 +279,12 @@
     var pastList = document.getElementById("past-list");
     past.forEach(function (i) {
       var li = document.createElement("li");
-      var ds = document.createElement("span"); ds.className = "d"; ds.textContent = days[i.d.getDay()] + ", " + monShort[i.d.getMonth()] + " " + i.d.getDate();
-      var ts = document.createElement("span"); ts.textContent = i.title;
-      li.appendChild(ds); li.appendChild(ts); pastList.appendChild(li);
+      var ds = document.createElement("span"); ds.className = "d"; ds.textContent = monShort[i.d.getMonth()] + " " + i.d.getDate();
+      var ts = document.createElement("span"); ts.className = "t"; ts.textContent = i.title;
+      li.appendChild(ds); li.appendChild(ts);
+      var rsvp = i.card.querySelector(".rsvp");
+      if (rsvp) { var a = document.createElement("a"); a.className = "p"; a.href = rsvp.href; a.target = "_blank"; a.rel = "noopener"; a.textContent = "partiful"; li.appendChild(a); }
+      pastList.appendChild(li);
     });
     document.getElementById("past-empty").hidden = past.length > 0;
 
