@@ -30,11 +30,10 @@
     font-size: 17px;
     line-height: 1.5;
     padding-inline: 20px;
-    padding-block: 28px 56px;
+    padding-block: 24px 56px;
   }
   a { color: inherit; }
-  .wrap { max-width: 620px; margin: 0 auto; display: grid; gap: 28px; }
-  header { display: grid; gap: 6px; }
+  .wrap { max-width: 620px; margin: 0 auto; display: grid; gap: 22px; }
   .wordmark {
     font-family: "Syne", "Arial Black", sans-serif;
     font-weight: 800;
@@ -42,10 +41,25 @@
     line-height: 0.95;
     letter-spacing: -0.03em;
     margin: 0;
-    text-wrap: balance;
   }
-  .wordmark span { color: var(--accent); }
-  .tag { color: var(--muted); margin: 0; max-width: 40ch; }
+
+  /* sticky tab bar: calendar / events / past */
+  .tabs {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+    background: var(--ground); padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .tabs button {
+    appearance: none; border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+    font: 700 14px/1 "Karla", "Helvetica Neue", Arial, sans-serif; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 12px 8px; border-radius: 4px; cursor: pointer;
+  }
+  .tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .tabs button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .view[hidden] { display: none !important; }
+
+  /* events */
   .events { display: grid; gap: 20px; }
   .event {
     background: var(--surface);
@@ -54,6 +68,7 @@
     padding: 22px 20px 20px;
     display: grid;
     gap: 16px;
+    scroll-margin-top: 80px;
   }
   .event[hidden] { display: none !important; }
   .when {
@@ -75,7 +90,6 @@
     margin: 0;
     text-wrap: balance;
   }
-  .blurb { margin: 0; max-width: 60ch; }
   .stops { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border-top: 1px solid var(--line); }
   .stop {
     display: grid; grid-template-columns: 92px 1fr; gap: 12px;
@@ -89,7 +103,6 @@
   .stop .hood { color: var(--muted); }
   .stop .links { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 6px; font-weight: 700; font-size: 15px; }
   .stop .links a { text-decoration-color: var(--accent); text-underline-offset: 3px; }
-  .stop .note { color: var(--muted); font-size: 15px; margin: 4px 0 0; }
   .rsvp {
     display: block; text-align: center; text-decoration: none;
     background: var(--accent); color: var(--accent-ink);
@@ -97,17 +110,39 @@
     padding: 14px 18px; border-radius: 4px; letter-spacing: -0.01em;
   }
   .rsvp:focus-visible, .stop a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
-  .rsvp small { display: block; font-family: "Karla", sans-serif; font-weight: 400; font-size: 14px; opacity: 0.85; }
   .empty { border: 1px dashed var(--line); border-radius: 6px; padding: 28px 20px; color: var(--muted); }
   .empty[hidden] { display: none !important; }
-  .past { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 18px; }
-  .past[hidden] { display: none !important; }
-  .past h3 { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; font-weight: 700; }
+
+  /* past: one crossed-out line each */
   .past ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
   .past li { display: flex; gap: 12px; align-items: baseline; color: var(--muted); text-decoration: line-through; text-decoration-color: var(--accent); text-decoration-thickness: 1.5px; }
-  .past .d { font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 82px; font-size: 15px; }
-  footer { color: var(--muted); font-size: 15px; border-top: 1px solid var(--line); padding-top: 18px; max-width: 48ch; }
-  @media (max-width: 420px) { .stop { grid-template-columns: 84px 1fr; } .time { font-size: 15px; } }
+  .past .d { font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 92px; font-size: 15px; }
+
+  /* calendar: one grid per month that has something on it */
+  .cal { display: grid; gap: 26px; }
+  .month { display: grid; gap: 10px; }
+  .month h3 { font-family: "Syne", "Arial Black", sans-serif; font-weight: 800; font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+  .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .dow { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); text-align: center; padding-bottom: 4px; font-weight: 700; }
+  .day {
+    aspect-ratio: 1; display: grid; place-items: center; border-radius: 4px;
+    font-variant-numeric: tabular-nums; font-size: 15px; color: var(--muted);
+    background: var(--surface); border: 1px solid transparent;
+  }
+  .day.blank { background: transparent; }
+  .day.today { border-color: var(--accent); color: var(--ink); }
+  .day.has { background: var(--accent); color: var(--accent-ink); font-weight: 700; cursor: pointer; }
+  .day.has.gone { background: var(--chip); color: var(--muted); text-decoration: line-through; text-decoration-color: var(--accent); }
+  .day.has:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .month ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .month li { display: flex; gap: 12px; align-items: baseline; }
+  .month li .d { font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 92px; font-size: 15px; color: var(--accent); font-weight: 700; }
+  .month li.gone { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--accent); }
+  .month li.gone .d { color: var(--muted); font-weight: 400; }
+  .month li a { text-decoration: none; }
+  .month li a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
+
+  @media (max-width: 420px) { .stop { grid-template-columns: 84px 1fr; } .time { font-size: 15px; } .tabs button { font-size: 13px; padding: 11px 4px; letter-spacing: 0.05em; } }
   @media (prefers-reduced-motion: no-preference) { .rsvp { transition: transform 120ms ease; } .rsvp:hover { transform: translateY(-1px); } }
 </style>
 </head>
@@ -117,9 +152,17 @@
     <h1 class="wordmark">events</h1>
   </header>
 
-  <section class="events" id="events">
+  <nav class="tabs" role="tablist" aria-label="view">
+    <button type="button" role="tab" id="tab-cal" aria-selected="false" aria-controls="view-cal">calendar</button>
+    <button type="button" role="tab" id="tab-events" aria-selected="true" aria-controls="view-events">events</button>
+    <button type="button" role="tab" id="tab-past" aria-selected="false" aria-controls="view-past">past</button>
+  </nav>
 
-    <!-- one <article> per event. data-date = YYYY-MM-DD local. past ones collapse on their own to one crossed-out line at the bottom, so NEVER delete a past article. keep it sparse: chip, title, stops (time / place / hood / links), rsvp. no blurb, no notes, no addresses (map link only). -->
+  <section class="view cal" id="view-cal" role="tabpanel" hidden></section>
+
+  <section class="view events" id="view-events" role="tabpanel">
+
+    <!-- one <article> per event, any order. data-date = YYYY-MM-DD local. the page sorts them, chips the upcoming ones, collapses past ones into the past tab and marks the calendar, so NEVER delete a past article. keep it sparse: chip, title, stops (time / place / hood / tickets / map), rsvp. no blurb, no notes, no street addresses on a house party (map link only for venues). -->
     <article class="event" data-date="2026-09-07">
       <div class="when"><span class="chip" data-chip></span><span>mon, sep 7</span></div>
       <h2>stoup cap hill hang</h2>
@@ -168,15 +211,28 @@
       <a class="rsvp" href="https://partiful.com/e/amOFY96bPKHnDFOeYB55" target="_blank" rel="noopener">rsvp on partiful</a>
     </article>
 
+    <article class="event" data-date="2026-09-25">
+      <div class="when"><span class="chip" data-chip></span><span>fri, sep 25</span></div>
+      <h2>brie's house party</h2>
+      <ul class="stops">
+        <li class="stop">
+          <span class="time">8:00 pm</span>
+          <div>
+            <b>brie's place</b>
+            <span class="hood">roosevelt</span>
+          </div>
+        </li>
+      </ul>
+      <a class="rsvp" href="https://partiful.com/e/Mx7pO9t9kQSVfoov9qOR" target="_blank" rel="noopener">rsvp on partiful</a>
+    </article>
+
+    <div class="empty" id="empty" hidden>nothing on the books right now.</div>
   </section>
 
-  <div class="empty" id="empty" hidden>nothing on the books right now.</div>
-
-  <section class="past" id="past" hidden>
-    <h3>been there</h3>
+  <section class="view past" id="view-past" role="tabpanel" hidden>
     <ul id="past-list"></ul>
+    <div class="empty" id="past-empty" hidden>nothing yet.</div>
   </section>
-
 </div>
 
 <script>
@@ -184,44 +240,109 @@
     var now = new Date();
     var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     var days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
-    var live = 0;
-    var past = [];
-    var cards = document.querySelectorAll(".event[data-date]");
-    for (var i = 0; i < cards.length; i++) {
-      var card = cards[i];
+    var months = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+    var monShort = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+
+    // 1) read the cards
+    var list = document.getElementById("view-events");
+    var cards = Array.prototype.slice.call(list.querySelectorAll(".event[data-date]"));
+    var items = cards.map(function (card) {
       var p = card.getAttribute("data-date").split("-");
       var d = new Date(+p[0], +p[1] - 1, +p[2]);
+      var h2 = card.querySelector("h2");
       var diff = Math.round((d - today) / 86400000);
-      var chip = card.querySelector("[data-chip]");
-      if (diff < 0) {
-        card.hidden = true;
-        var h2 = card.querySelector("h2");
-        var when = card.querySelector(".when span:last-child");
-        past.push({ d: d, date: when ? when.textContent : "", title: h2 ? h2.textContent : "" });
-        continue;
-      }
-      live++;
-      var label = "";
-      if (diff === 0) label = "tonight";
-      else if (diff === 1) label = "tomorrow";
-      else if (diff <= 6) label = "this " + days[d.getDay()];
-      else label = "in " + diff + " days";
-      if (chip) chip.textContent = label;
-    }
+      card.id = "e-" + card.getAttribute("data-date");
+      return { card: card, d: d, key: card.getAttribute("data-date"), diff: diff, title: h2 ? h2.textContent : "", gone: diff < 0 };
+    });
+
+    // 2) events tab: upcoming only, soonest first, chipped
+    var upcoming = items.filter(function (i) { return !i.gone; }).sort(function (a, b) { return a.d - b.d; });
     var empty = document.getElementById("empty");
-    if (empty) empty.hidden = live > 0;
-    var pastBox = document.getElementById("past");
-    var list = document.getElementById("past-list");
-    if (pastBox && list && past.length) {
-      past.sort(function (a, b) { return b.d - a.d; });
-      for (var j = 0; j < past.length; j++) {
-        var li = document.createElement("li");
-        var ds = document.createElement("span"); ds.className = "d"; ds.textContent = past[j].date;
-        var ts = document.createElement("span"); ts.textContent = past[j].title;
-        li.appendChild(ds); li.appendChild(ts); list.appendChild(li);
-      }
-      pastBox.hidden = false;
+    upcoming.forEach(function (i) {
+      var chip = i.card.querySelector("[data-chip]");
+      var label = i.diff === 0 ? "tonight" : i.diff === 1 ? "tomorrow" : i.diff <= 6 ? "this " + days[i.d.getDay()] : "in " + i.diff + " days";
+      if (chip) chip.textContent = label;
+      list.insertBefore(i.card, empty);
+    });
+    items.forEach(function (i) { if (i.gone) i.card.hidden = true; });
+    empty.hidden = upcoming.length > 0;
+
+    // 3) past tab: one crossed-out line each, newest first
+    var past = items.filter(function (i) { return i.gone; }).sort(function (a, b) { return b.d - a.d; });
+    var pastList = document.getElementById("past-list");
+    past.forEach(function (i) {
+      var li = document.createElement("li");
+      var ds = document.createElement("span"); ds.className = "d"; ds.textContent = days[i.d.getDay()] + ", " + monShort[i.d.getMonth()] + " " + i.d.getDate();
+      var ts = document.createElement("span"); ts.textContent = i.title;
+      li.appendChild(ds); li.appendChild(ts); pastList.appendChild(li);
+    });
+    document.getElementById("past-empty").hidden = past.length > 0;
+
+    // 4) calendar tab: this month plus any month that has an event, oldest first
+    var byKey = {}; items.forEach(function (i) { byKey[i.key] = i; });
+    var monthKeys = {};
+    monthKeys[today.getFullYear() + "-" + today.getMonth()] = true;
+    items.forEach(function (i) { monthKeys[i.d.getFullYear() + "-" + i.d.getMonth()] = true; });
+    var cal = document.getElementById("view-cal");
+    Object.keys(monthKeys).map(function (k) { var p = k.split("-"); return { y: +p[0], m: +p[1] }; })
+      .sort(function (a, b) { return a.y - b.y || a.m - b.m; })
+      .forEach(function (mo) {
+        var sec = document.createElement("div"); sec.className = "month";
+        var h3 = document.createElement("h3"); h3.textContent = months[mo.m] + (mo.y !== today.getFullYear() ? " " + mo.y : ""); sec.appendChild(h3);
+        var grid = document.createElement("div"); grid.className = "grid";
+        days.forEach(function (n) { var c = document.createElement("div"); c.className = "dow"; c.textContent = n.charAt(0); grid.appendChild(c); });
+        var first = new Date(mo.y, mo.m, 1);
+        var count = new Date(mo.y, mo.m + 1, 0).getDate();
+        for (var b = 0; b < first.getDay(); b++) { var bl = document.createElement("div"); bl.className = "day blank"; grid.appendChild(bl); }
+        var lines = [];
+        for (var day = 1; day <= count; day++) {
+          var key = mo.y + "-" + String(mo.m + 1).padStart(2, "0") + "-" + String(day).padStart(2, "0");
+          var cell = document.createElement("div"); cell.className = "day"; cell.textContent = day;
+          var isToday = mo.y === today.getFullYear() && mo.m === today.getMonth() && day === today.getDate();
+          if (isToday) cell.classList.add("today");
+          var it = byKey[key];
+          if (it) {
+            cell.classList.add("has"); if (it.gone) cell.classList.add("gone");
+            cell.setAttribute("role", "link"); cell.tabIndex = 0; cell.title = it.title;
+            (function (item) {
+              var go = function () { show(item.gone ? "past" : "events"); if (!item.gone) item.card.scrollIntoView({ behavior: "smooth", block: "start" }); };
+              cell.addEventListener("click", go);
+              cell.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+            })(it);
+            lines.push(it);
+          }
+          grid.appendChild(cell);
+        }
+        sec.appendChild(grid);
+        if (lines.length) {
+          var ul = document.createElement("ul");
+          lines.forEach(function (it) {
+            var li = document.createElement("li"); if (it.gone) li.className = "gone";
+            var ds = document.createElement("span"); ds.className = "d"; ds.textContent = days[it.d.getDay()] + " " + it.d.getDate();
+            var a = document.createElement("a"); a.href = "#" + it.card.id; a.textContent = it.title;
+            a.addEventListener("click", function (e) { e.preventDefault(); show(it.gone ? "past" : "events"); if (!it.gone) it.card.scrollIntoView({ behavior: "smooth", block: "start" }); });
+            li.appendChild(ds); li.appendChild(a); ul.appendChild(li);
+          });
+          sec.appendChild(ul);
+        }
+        cal.appendChild(sec);
+      });
+
+    // 5) tabs
+    var tabs = { cal: document.getElementById("tab-cal"), events: document.getElementById("tab-events"), past: document.getElementById("tab-past") };
+    var views = { cal: cal, events: list, past: document.getElementById("view-past") };
+    function show(name) {
+      Object.keys(tabs).forEach(function (k) {
+        tabs[k].setAttribute("aria-selected", k === name ? "true" : "false");
+        views[k].hidden = k !== name;
+      });
+      try { localStorage.setItem("events-tab", name); } catch (e) {}
     }
+    Object.keys(tabs).forEach(function (k) { tabs[k].addEventListener("click", function () { show(k); }); });
+    var start = "events";
+    try { var saved = localStorage.getItem("events-tab"); if (saved && tabs[saved]) start = saved; } catch (e) {}
+    if (location.hash === "#calendar") start = "cal"; else if (location.hash === "#past") start = "past";
+    show(start);
   })();
 </script>
 </body>
