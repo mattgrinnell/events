@@ -69,7 +69,7 @@
   .event h2 {
     font-family: "Syne", "Arial Black", sans-serif;
     font-weight: 800;
-    font-size: clamp(26px, 6.5vw, 34px);
+    font-size: clamp(24px, 6vw, 34px);
     line-height: 1.05;
     letter-spacing: -0.02em;
     margin: 0;
@@ -78,7 +78,7 @@
   .blurb { margin: 0; max-width: 60ch; }
   .stops { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border-top: 1px solid var(--line); }
   .stop {
-    display: grid; grid-template-columns: 82px 1fr; gap: 12px;
+    display: grid; grid-template-columns: 92px 1fr; gap: 12px;
     padding: 14px 0; border-bottom: 1px solid var(--line);
   }
   .time {
@@ -100,8 +100,14 @@
   .rsvp small { display: block; font-family: "Karla", sans-serif; font-weight: 400; font-size: 14px; opacity: 0.85; }
   .empty { border: 1px dashed var(--line); border-radius: 6px; padding: 28px 20px; color: var(--muted); }
   .empty[hidden] { display: none !important; }
+  .past { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 18px; }
+  .past[hidden] { display: none !important; }
+  .past h3 { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; font-weight: 700; }
+  .past ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .past li { display: flex; gap: 12px; align-items: baseline; color: var(--muted); text-decoration: line-through; text-decoration-color: var(--accent); text-decoration-thickness: 1.5px; }
+  .past .d { font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 82px; font-size: 15px; }
   footer { color: var(--muted); font-size: 15px; border-top: 1px solid var(--line); padding-top: 18px; max-width: 48ch; }
-  @media (max-width: 420px) { .stop { grid-template-columns: 70px 1fr; } }
+  @media (max-width: 420px) { .stop { grid-template-columns: 84px 1fr; } .time { font-size: 15px; } }
   @media (prefers-reduced-motion: no-preference) { .rsvp { transition: transform 120ms ease; } .rsvp:hover { transform: translateY(-1px); } }
 </style>
 </head>
@@ -113,7 +119,7 @@
 
   <section class="events" id="events">
 
-    <!-- one <article> per event. data-date = YYYY-MM-DD local. past ones hide on their own the morning after. keep it sparse: chip, title, stops (time / place / hood / links), rsvp. no blurb, no notes, no addresses (map link only). -->
+    <!-- one <article> per event. data-date = YYYY-MM-DD local. past ones collapse on their own to one crossed-out line at the bottom, so NEVER delete a past article. keep it sparse: chip, title, stops (time / place / hood / links), rsvp. no blurb, no notes, no addresses (map link only). -->
     <article class="event" data-date="2026-09-18">
       <div class="when"><span class="chip" data-chip></span><span>fri, sep 18</span></div>
       <h2>oktoberfest then what so not</h2>
@@ -148,6 +154,11 @@
 
   <div class="empty" id="empty" hidden>nothing on the books right now.</div>
 
+  <section class="past" id="past" hidden>
+    <h3>been there</h3>
+    <ul id="past-list"></ul>
+  </section>
+
 </div>
 
 <script>
@@ -156,6 +167,7 @@
     var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     var days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
     var live = 0;
+    var past = [];
     var cards = document.querySelectorAll(".event[data-date]");
     for (var i = 0; i < cards.length; i++) {
       var card = cards[i];
@@ -163,7 +175,13 @@
       var d = new Date(+p[0], +p[1] - 1, +p[2]);
       var diff = Math.round((d - today) / 86400000);
       var chip = card.querySelector("[data-chip]");
-      if (diff < 0) { card.hidden = true; continue; }
+      if (diff < 0) {
+        card.hidden = true;
+        var h2 = card.querySelector("h2");
+        var when = card.querySelector(".when span:last-child");
+        past.push({ d: d, date: when ? when.textContent : "", title: h2 ? h2.textContent : "" });
+        continue;
+      }
       live++;
       var label = "";
       if (diff === 0) label = "tonight";
@@ -174,6 +192,18 @@
     }
     var empty = document.getElementById("empty");
     if (empty) empty.hidden = live > 0;
+    var pastBox = document.getElementById("past");
+    var list = document.getElementById("past-list");
+    if (pastBox && list && past.length) {
+      past.sort(function (a, b) { return b.d - a.d; });
+      for (var j = 0; j < past.length; j++) {
+        var li = document.createElement("li");
+        var ds = document.createElement("span"); ds.className = "d"; ds.textContent = past[j].date;
+        var ts = document.createElement("span"); ts.textContent = past[j].title;
+        li.appendChild(ds); li.appendChild(ts); list.appendChild(li);
+      }
+      pastBox.hidden = false;
+    }
   })();
 </script>
 </body>
